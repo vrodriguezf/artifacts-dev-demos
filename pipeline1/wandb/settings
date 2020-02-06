@@ -1,0 +1,5 @@
+[default]
+project = artifacts8
+entity = shawn
+base_url = http://api.wandb.test
+
