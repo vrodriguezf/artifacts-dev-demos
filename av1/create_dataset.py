@@ -5,8 +5,6 @@ import random
 import wandb
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--artifact_name', type=str, required=True)
-parser.add_argument('--n_examples', type=int, required=True)
 
 WEATHER = {
     'clear': 0.4,
@@ -120,7 +118,7 @@ def main():
         raise Exception('no entity')
     print('entity', entity_name)
 
-    av_path = make_dataset_artifact(entity_name, project_name, args.artifact_name, args.n_examples)
+    av_path = make_dataset_artifact(entity_name, project_name, 'dataset-train-main', 100121 + int(random.random() * 10000))
     print('AV', av_path)
 
     for i in range(6):

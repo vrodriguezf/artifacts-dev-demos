@@ -7,8 +7,6 @@ import wandb
 import create_dataset
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--artifact_name', type=str, required=True)
-parser.add_argument('--n_examples', type=int, required=True)
 
 iapi = wandb.apis.InternalApi()
 papi = wandb.Api()
@@ -21,7 +19,7 @@ def main():
     if entity_name is None:
         raise Exception('no entity')
 
-    create_dataset.make_dataset_artifact(entity_name, project_name, args.artifact_name, args.n_examples)
+    create_dataset.make_dataset_artifact(entity_name, project_name, 'dataset-test-main', 1202 + random.random() * 100)
 
 
 if __name__ == '__main__':

@@ -35,6 +35,14 @@ def main():
       '%s/%s/model-pedestrian:latest' % (entity_name, project_name),
       '%s/%s/dataset-test-main:golden' % (entity_name, project_name))
 
+    eval_model('test-stopsign-golden',
+      '%s/%s/model-stopsign:latest' % (entity_name, project_name),
+      '%s/%s/dataset-test-main:golden' % (entity_name, project_name))
+
+    eval_model('test-car-golden',
+      '%s/%s/model-car:latest' % (entity_name, project_name),
+      '%s/%s/dataset-test-main:golden' % (entity_name, project_name))
+
 
 if __name__ == '__main__':
     main()
