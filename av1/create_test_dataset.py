@@ -13,13 +13,10 @@ papi = wandb.Api()
 
 
 def main():
-    args = parser.parse_args()
-    entity_name = iapi.settings('entity')
-    project_name = iapi.settings('project')
-    if entity_name is None:
-        raise Exception('no entity')
-
-    create_dataset.make_dataset_artifact(entity_name, project_name, 'dataset-test-main', 1202 + random.random() * 100)
+    run = wandb.init(job_type='create-test-dataset')
+    run.log_artifact('dataset-test-main',
+        metadata=create_dataset.gen_metadata(1202 + random.random() * 100),
+        aliases=['golden'])
 
 
 if __name__ == '__main__':

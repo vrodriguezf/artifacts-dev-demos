@@ -15,33 +15,26 @@ papi = wandb.Api()
 def eval_model(job_type, model_path, dataset_path):
     run = wandb.init(job_type=job_type, reinit=True)
     with run:
-        input_dataset = papi.artifact_version(dataset_path)
-        run.log_input(input_dataset)
-        input_model = papi.artifact_version(model_path)
-        run.log_input(input_model)
+        run.use_artifact(dataset_path)
+        run.use_artifact(model_path)
         for i in range(5):
             for k in create_dataset.CLASSES:
                 run.log({('%s-acc' % k): random.random() / (i + 1)})
 
 def main():
     args = parser.parse_args()
-    entity_name = iapi.settings('entity')
-    project_name = iapi.settings('project')
-    if entity_name is None:
-        raise Exception('no entity')
-    print('entity', entity_name)
 
     eval_model('test-pedestrian-golden',
-      '%s/%s/model-pedestrian:latest' % (entity_name, project_name),
-      '%s/%s/dataset-test-main:golden' % (entity_name, project_name))
+      'model-pedestrian:latest',
+      'dataset-test-main:golden')
 
     eval_model('test-stopsign-golden',
-      '%s/%s/model-stopsign:latest' % (entity_name, project_name),
-      '%s/%s/dataset-test-main:golden' % (entity_name, project_name))
+      'model-stopsign:latest',
+      'dataset-test-main:golden')
 
     eval_model('test-car-golden',
-      '%s/%s/model-car:latest' % (entity_name, project_name),
-      '%s/%s/dataset-test-main:golden' % (entity_name, project_name))
+      'model-car:latest',
+      'dataset-test-main:golden')
 
 
 if __name__ == '__main__':

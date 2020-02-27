@@ -75,59 +75,31 @@ def gen_metadata(n_examples):
         }
     }
 
-def make_dataset_artifact(entity_name, project_name, artifact_name, n_examples):
-    projects = papi.projects(entity_name)
-    project = None
-    for p in projects:
-        if p.name == project_name:
-            project = p
-    if project is None:
-        raise Exception('no project')
 
-    artifact_id = None
-    for a in project.artifacts():
-        if a.name == artifact_name:
-            artifact_id = a.id
-
-    if artifact_id is None:
-        artifact_id = iapi.create_artifact(entity_name, project_name, artifact_name)
-
-    metadata = gen_metadata(n_examples)
-    av = iapi.create_artifact_version(entity_name, project_name, None, artifact_id, metadata=json.dumps(metadata))
-    return entity_name + '/' + project_name + '/' + artifact_name + ':' + av['name']
-
-
-def train_model(dataset_path, job_type):
+def train_model(dataset_metadata, job_type):
     run = wandb.init(job_type=job_type, reinit=True)
     with run:
         run.config.update({'learning_rate': random.random()})
-        input_dataset = papi.artifact_version(dataset_path)
-        run.log_input(input_dataset)
+        run.use_artifact('dataset-train-main', metadata=dataset_metadata)
         for i in range(10):
             run.log({'loss': random.random() / (i + 1)})
         model_file = open('model.json', 'w')
-        model_file.write('Model: %s' % job_type)
+        model_file.write('Model: %s\n%s\n' % (job_type, random.random()))
         model_file.close()
-        run.log_artifact('model-%s' % job_type.lstrip('train-'), 'model.json')
+        run.log_artifact('model-%s' % job_type.lstrip('train-'), 'model.json', aliases='latest')
 
 def main():
     args = parser.parse_args()
-    entity_name = iapi.settings('entity')
-    project_name = iapi.settings('project')
-    if entity_name is None:
-        raise Exception('no entity')
-    print('entity', entity_name)
 
-    av_path = make_dataset_artifact(entity_name, project_name, 'dataset-train-main', 100121 + int(random.random() * 10000))
-    print('AV', av_path)
+    dataset_metadata = gen_metadata(100121 + int(random.random() * 10000))
 
     for i in range(6):
         if random.random() < 0.5:
-            train_model(av_path, 'train-stopsign')
+            train_model(dataset_metadata, 'train-stopsign')
         if random.random() < 0.6:
-            train_model(av_path, 'train-pedestrian')
+            train_model(dataset_metadata, 'train-pedestrian')
         if random.random() < 0.7:
-            train_model(av_path, 'train-car')
+            train_model(dataset_metadata, 'train-car')
 
 
 if __name__ == '__main__':
