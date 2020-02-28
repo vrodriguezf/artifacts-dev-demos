@@ -1,3 +1,5 @@
+# Generates a training dataset and trains a few different (fake) models
+
 import argparse
 import json
 import random
