@@ -7,102 +7,29 @@ import random
 import wandb
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--datadir', type=str, required=True,
+                    help='directory to read training data artifact from')
+parser.add_argument('--model_type', type=str, default='stopsign',
+                    help='what type of model are you training?')
 
-WEATHER = {
-    'clear': 0.4,
-    'partly-cloudy': 0.2,
-    'overcast': 0.3,
-    'rainy': 0.2,
-    'foggy': 0.1
-}
-
-SCENE = {
-    'residential': 0.1,
-    'highway': 0.2,
-    'city-street': 0.3,
-    'parking-lot': 0.05,
-    'tunnel': 0.1
-}
-
-HOURS = {
-    'dawn-dusk': 0.07,
-    'daytime': 0.5,
-    'night': 0.43
-}
-
-CLASSES = {
-    'bus': 0.03,
-    'light': 0.2,
-    'sign': 0.3,
-    'person': 0.4,
-    'bike': 0.1,
-    'truck': 0.2,
-    'car': 0.9,
-    'train': 0.001,
-    'rider': 0.06,
-}
-
-OCCLUDED = {
-    'occloued': 0.4,
-    'not': 0.6,
-}
-
-iapi = wandb.apis.InternalApi()
-papi = wandb.Api()
-
-def gen_metadata(n_examples):
-    weather = {}
-    for key, ratio in WEATHER.items():
-        weather[key] = int((ratio + ratio * (random.random() - 0.5) * 0.2) * n_examples)
-    scene = {}
-    for key, ratio in SCENE.items():
-        scene[key] = int((ratio + ratio * (random.random() - 0.5) * 0.2) * n_examples)
-    hours = {}
-    for key, ratio in HOURS.items():
-        hours[key] = int((ratio + ratio * (random.random() - 0.5) * 0.2) * n_examples)
-    class_counts = {}
-    for key, ratio in CLASSES.items():
-        class_counts[key] = int((ratio + ratio * (random.random() - 0.5) * 0.2) * n_examples)
-    occluded = {}
-    for key, ratio in OCCLUDED.items():
-        occluded[key] = int((ratio + ratio * (random.random() - 0.5) * 0.2) * n_examples)
-    return {
-        'summary': {
-            'n_examples': n_examples,
-            'weather': weather,
-            'scene': scene,
-            'hours': hours,
-            'class_counts': class_counts,
-            'occluded': occluded
-        }
-    }
-
-
-def train_model(dataset_metadata, job_type):
-    run = wandb.init(job_type=job_type, reinit=True)
+def train_model(datadir, model_type):
+    run = wandb.init(job_type='train-%s' % model_type, reinit=True)
     with run:
         run.config.update({'learning_rate': random.random()})
-        run.use_artifact('dataset-train-main', metadata=dataset_metadata)
+        run.use_artifact('dataset-train-main', path=datadir)
+
         for i in range(10):
             run.log({'loss': random.random() / (i + 1)})
+
         model_file = open('model.json', 'w')
-        model_file.write('Model: %s\n%s\n' % (job_type, random.random()))
+        model_file.write('Model: %s\n%s\n' % (model_type, random.random()))
         model_file.close()
-        run.log_artifact('model-%s' % job_type.lstrip('train-'), 'model.json', aliases='latest')
+
+        run.log_artifact('model-%s' % model_type, paths='model.json', aliases='latest')
 
 def main():
     args = parser.parse_args()
-
-    dataset_metadata = gen_metadata(100121 + int(random.random() * 10000))
-
-    for i in range(6):
-        if random.random() < 0.5:
-            train_model(dataset_metadata, 'train-stopsign')
-        if random.random() < 0.6:
-            train_model(dataset_metadata, 'train-pedestrian')
-        if random.random() < 0.7:
-            train_model(dataset_metadata, 'train-car')
-
+    train_model(args.datadir, args.model_type)
 
 if __name__ == '__main__':
     main()
