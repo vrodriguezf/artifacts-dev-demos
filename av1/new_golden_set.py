@@ -7,7 +7,7 @@ import random
 import wandb
 
 parser = argparse.ArgumentParser()
-parser.add_argument('datadir', type=str,
+parser.add_argument('--datadir', type=str, required=True,
                     help='directory to read training data artifact from')
 
 def upload_golden_set(datadir):
