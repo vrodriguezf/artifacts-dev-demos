@@ -78,14 +78,22 @@ def gen_metadata(n_examples):
     }
 
 def main():
+    import wandb
+
+    run = wandb.init(job_type='create_dataset')
+
     args = parser.parse_args()
     try:
         os.makedirs(args.dir)
     except FileExistsError:
         pass
-    f = open(os.path.join(args.dir, 'artifact-metadata.json'), 'w')
-    json.dump(gen_metadata(args.n_examples), f)
+    path = os.path.join(args.dir, 'artifact-metadata.json')
+    f = open(path, 'w')
+    metadata = gen_metadata(args.n_examples)
+    json.dump(metadata, f)
     f.write('\n')
+
+    run.log_artifact('dataset', paths=args.dir, metadata=metadata)
     
 
 if __name__ == '__main__':
