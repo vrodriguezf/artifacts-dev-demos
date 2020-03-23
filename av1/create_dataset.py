@@ -5,9 +5,9 @@ import os
 import sys
 
 parser = argparse.ArgumentParser()
-parser.add_argument('dir', type=str,
+parser.add_argument('--dir', type=str,
                     help='directory to write metadata file to')
-parser.add_argument('n_examples', type=int,
+parser.add_argument('--n_examples', type=int,
                     help='number of examples to generate metadata for')
 
 WEATHER = {

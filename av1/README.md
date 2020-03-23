@@ -6,7 +6,7 @@ These scripts don't train real models, but are an example of what a simple auton
 
 Generate a new "dataset" in a folder. E.g.
 
-```python gen_dataset.py --dir=train_data --n_examples 100014```
+```python create_dataset.py --dir=train_data --n_examples 100014```
 
 ## train.py
 
