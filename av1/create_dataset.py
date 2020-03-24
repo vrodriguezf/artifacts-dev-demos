@@ -1,14 +1,20 @@
 import argparse
+import binascii
 import json
 import random
 import os
 import sys
 
+import wandb
+
+
 parser = argparse.ArgumentParser()
-parser.add_argument('--dir', type=str,
+parser.add_argument('--datadir', type=str, required=True,
                     help='directory to write metadata file to')
-parser.add_argument('--n_examples', type=int,
+parser.add_argument('--n_examples', type=int, required=True,
                     help='number of examples to generate metadata for')
+parser.add_argument('--golden', action='store_true',
+                    help='apply the "golden" alias to this dataset')
 
 WEATHER = {
     'clear': 0.4,
@@ -78,22 +84,29 @@ def gen_metadata(n_examples):
     }
 
 def main():
-    import wandb
-
     run = wandb.init(job_type='create_dataset')
 
     args = parser.parse_args()
-    try:
-        os.makedirs(args.dir)
-    except FileExistsError:
-        pass
-    path = os.path.join(args.dir, 'artifact-metadata.json')
-    f = open(path, 'w')
-    metadata = gen_metadata(args.n_examples)
-    json.dump(metadata, f)
-    f.write('\n')
 
-    run.log_artifact('dataset', paths=args.dir, metadata=metadata)
+    # We store the path to the actual data inside the artifact. For this example,
+    # this is not a real url.
+    external_id = binascii.b2a_hex(os.urandom(15))
+    artifact_contents = {'url': 's3://example.com/path/to/data/%s' %
+        external_id.decode('utf-8')}
+
+    # Write the artifact-contents file.
+    os.makedirs(args.datadir, exist_ok=True)
+    path = os.path.join(args.datadir, 'artifact-contents.json')
+    with open(path, 'w') as artifact_contents_file:
+        json.dump(artifact_contents, artifact_contents_file, indent=2)
+        artifact_contents_file.write('\n')
+
+    # save the artifact, along with useful metadata about it's contents
+    metadata = gen_metadata(args.n_examples)
+    aliases = None
+    if args.golden:
+        aliases = ['golden']
+    run.log_artifact('dataset', paths=args.datadir, metadata=metadata, aliases=aliases)
     
 
 if __name__ == '__main__':

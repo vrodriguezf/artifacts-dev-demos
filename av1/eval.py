@@ -4,7 +4,7 @@ import random
 
 import wandb
 
-import gen_dataset
+import create_dataset
 
 parser = argparse.ArgumentParser()
 
@@ -18,12 +18,12 @@ def eval_model(job_type, model_path, dataset_path):
         run.use_artifact(dataset_path)
         run.use_artifact(model_path)
         for i in range(5):
-            for k in gen_dataset.CLASSES:
+            for k in create_dataset.CLASSES:
                 run.log({('%s-acc' % k): random.random() / (i + 1)})
 
 def main():
     args = parser.parse_args()
-    eval_model('eval-golden', args.model, 'dataset-test-main:golden')
+    eval_model('eval-golden', args.model, 'dataset:golden')
 
 
 if __name__ == '__main__':

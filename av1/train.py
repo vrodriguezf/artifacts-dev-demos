@@ -16,7 +16,7 @@ def train_model(datadir, model_type):
     run = wandb.init(job_type='train-%s' % model_type, reinit=True)
     with run:
         run.config.update({'learning_rate': random.random()})
-        run.use_artifact('dataset-train-main', path=datadir)
+        run.use_artifact('dataset', path=datadir)
 
         for i in range(10):
             run.log({'loss': random.random() / (i + 1)})
