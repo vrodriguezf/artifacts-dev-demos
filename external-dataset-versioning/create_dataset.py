@@ -1,18 +1,20 @@
 import argparse
+import collections
 import os
 import random
 import sys
 import tempfile
 
-from pycocotools.coco import COCO
 import wandb
 
 import dataset
+import bucket_api
+import data_library
 
 parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--supercategories', type=str, nargs='*',
+parser.add_argument('--supercategories', type=str, nargs='*', default=[],
                     help='coco supercategories to take examples from')
-parser.add_argument('--categories', type=str, nargs='*',
+parser.add_argument('--categories', type=str, nargs='*', default=[],
                     help='coco categories to take examples from')
 parser.add_argument('--select_fraction', type=float, default=1,
                     help='random fraction of examples to select')
@@ -20,7 +22,7 @@ parser.add_argument('--seed', type=int, default=0,
                     help='random seed')
 
 parser.add_argument('--annotation_types', type=str, nargs='*', required=True,
-                    choices=['bbox', 'segmentation', 'is_crowd'],
+                    choices=['bbox', 'segmentation'],
                     help='coco annotation types to include in dataset')
 
 
@@ -31,34 +33,47 @@ def main(argv):
 
     random.seed(args.seed)
 
-    bucket_api = dataset.BucketApiLocal('bucket')
-    ds_api = dataset.CocoDatasetAPI(bucket_api)
+    bucketapi = bucket_api.get_bucket_api()
 
-    coco_api = ds_api.get_coco_api()
+    categories = data_library.get_categories()
 
-    # Select image IDs for the requested categories
-    cat_ids = coco_api.getCatIds(catNms=args.categories, supNms=args.supercategories)
-    img_ids = coco_api.getImgIds(catIds=cat_ids)
-    img_ids = random.sample(img_ids, int(args.select_fraction * len(img_ids)))
-    categories = [c['name'] for c in coco_api.loadCats(cat_ids)]
+    chosen_cats = [c for c in categories
+        if c['supercategory'] in args.supercategories or
+           c['name'] in args.categories]
+    chosen_cat_ids = [c['id'] for c in categories]
 
-    hashes = ds_api.get_content_hashes(img_ids)
-    annotations = ds_api.get_annotations(img_ids, args.annotation_types)
+    example_labels = collections.defaultdict(list)
+    labels = []
 
-    manifest = dataset.DatasetArtifactManifest()
-    for img_id in img_ids:
-        if img_id in annotations:
-            manifest.set_example(img_id, hashes[img_id], annotations[img_id])
+    if 'bbox' in args.annotation_types:
+        box_labels = data_library.get_box_labels()
+        for bl in box_labels.values():
+            if bl['category_id'] in chosen_cat_ids:
+                labels.append(bl)
+    if 'segmentation' in args.annotation_types:
+        seg_labels = data_library.get_seg_labels()
+        for sl in seg_labels.values():
+            if sl['category_id'] in chosen_cat_ids:
+                labels.append(sl)
 
-    manifest_path = 'dataset.json'
-    manifest.dump(manifest_path)
+    example_image_paths = set(l['image_path'] for l in labels)
+    example_image_paths = set(random.sample(
+        example_image_paths, int(args.select_fraction * len(example_image_paths))))
+    labels = [l for l in labels if l['image_path'] in example_image_paths]
+    
+    examples = [(path, bucketapi.get_hash(path)) for path in example_image_paths]
+    artifact = dataset.DatasetArtifact(examples, labels)
+
+    dataset_dir = './artifact'
+    os.makedirs(dataset_dir, exist_ok=True)
+    artifact.dump_files(dataset_dir)
 
     run.log_artifact('dataset',
-        paths=manifest_path,
+        paths=dataset_dir,
         metadata={
             'annotation_types': args.annotation_types,
-            'categories': categories,
-            'n_examples': len(img_ids)})
+            'categories': [c['name'] for c in chosen_cats],
+            'n_examples': len(examples)})
 
 
 
