@@ -9,6 +9,7 @@ TODO: More info
 First run these setup steps.
 
 ```
+$ sh download_coco_val.sh
 $ python demo_setup.py
 ```
 
