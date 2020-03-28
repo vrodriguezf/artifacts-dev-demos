@@ -4,7 +4,7 @@ This folder contains an end-to-end example of how to version your datasets using
 
 TODO: More info
 
-# setup
+# Setup
 
 First run these setup steps.
 
@@ -18,7 +18,7 @@ $ pip install -r requirements.txt
 $ python demo_setup.py
 ```
 
-# initialize a wandb project in this folder
+# Initialize a wandb project in this folder
 
 ```
 $ wandb init
@@ -31,7 +31,7 @@ $ python sim_collection_run.py col1 0 5000
 $ python sim_collection_run.py col2 5000 8000
 ```
 
-# create a dataset artifact based
+# Create a new dataset artifact from a subset of your data library
 
 ```
 python create_dataset.py \
@@ -41,7 +41,7 @@ python create_dataset.py \
   --dataset_version v1
 ```
 
-# train a model based on the dataset
+# Train a model based on the dataset
 
 ```
 python train.py \
