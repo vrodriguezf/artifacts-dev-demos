@@ -43,7 +43,7 @@ def main(argv):
     chosen_cats = [c for c in categories
         if c['supercategory'] in args.supercategories or
            c['name'] in args.categories]
-    chosen_cat_ids = [c['id'] for c in categories]
+    chosen_cat_ids = [c['id'] for c in chosen_cats]
 
     example_labels = collections.defaultdict(list)
     labels = []
@@ -66,6 +66,7 @@ def main(argv):
     
     examples = [(path, bucketapi.get_hash(path)) for path in example_image_paths]
     artifact = dataset.DatasetArtifact(examples, labels)
+    # print('len(examples)', examples)
 
     dataset_dir = './artifact'
     os.makedirs(dataset_dir, exist_ok=True)
@@ -77,7 +78,7 @@ def main(argv):
             'annotation_types': args.annotation_types,
             'categories': [c['name'] for c in chosen_cats],
             'n_examples': len(examples)},
-        aliases=[args.dataset_version])
+        aliases=[args.dataset_version] + ['latest'])
 
 
 
