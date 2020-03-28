@@ -10,7 +10,18 @@ First run these setup steps.
 
 ```
 $ sh download_coco_val.sh
+
+# Special step before release: install wandb from client repo artifacts/next branch
+# (PYENV_VERSION=<target_pyenv> pip install -e . in wandb/client folder)
+
+$ pip install -r requirements.txt
 $ python demo_setup.py
+```
+
+# initialize a wandb project in this folder
+
+```
+$ wandb init
 ```
 
 # Add data to your data library
