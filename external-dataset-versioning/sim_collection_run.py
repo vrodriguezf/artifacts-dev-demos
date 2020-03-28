@@ -5,7 +5,7 @@ import json
 import os
 import sys
 
-from pycocotools.coco import COCO
+from demodata.coco import COCO
 
 import bucket_api
 import data_library

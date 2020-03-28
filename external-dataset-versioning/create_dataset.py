@@ -12,6 +12,10 @@ import bucket_api
 import data_library
 
 parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--dataset_name', type=str, required=True,
+                    help='name for this dataset')
+parser.add_argument('--dataset_version', type=str, required=True,
+                    help='version label for this dataset')
 parser.add_argument('--supercategories', type=str, nargs='*', default=[],
                     help='coco supercategories to take examples from')
 parser.add_argument('--categories', type=str, nargs='*', default=[],
@@ -20,7 +24,6 @@ parser.add_argument('--select_fraction', type=float, default=1,
                     help='random fraction of examples to select')
 parser.add_argument('--seed', type=int, default=0,
                     help='random seed')
-
 parser.add_argument('--annotation_types', type=str, nargs='*', required=True,
                     choices=['bbox', 'segmentation'],
                     help='coco annotation types to include in dataset')
@@ -68,12 +71,13 @@ def main(argv):
     os.makedirs(dataset_dir, exist_ok=True)
     artifact.dump_files(dataset_dir)
 
-    run.log_artifact('dataset',
+    run.log_artifact(args.dataset_name,
         paths=dataset_dir,
         metadata={
             'annotation_types': args.annotation_types,
             'categories': [c['name'] for c in chosen_cats],
-            'n_examples': len(examples)})
+            'n_examples': len(examples)},
+        aliases=[args.dataset_version])
 
 
 
