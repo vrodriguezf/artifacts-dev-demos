@@ -1,22 +1,42 @@
 import json
 import os
 
+import bucket_api
+import data_library_query
+
+IMAGES_FNAME = 'images.json'
+LABELS_FNAME = 'labels.json'
+
 
 class DatasetArtifact(object):
     @classmethod
-    def load(cls, path):
-        with open(path) as f:
-            return cls(json.load(f))
+    def from_dir(cls, dirpath):
+        examples = json.load(open(os.path.join(dirpath, IMAGES_FNAME)))
+        labels = json.load(open(os.path.join(dirpath, LABELS_FNAME)))
+        return cls(examples, labels)
 
+    @classmethod
+    def from_library_query(cls, example_image_paths, label_types):
+        bucketapi = bucket_api.get_bucket_api()
+        examples = [
+            [path, bucketapi.get_hash(path)] for path in example_image_paths]
+        labels = data_library_query.labels_for_images(
+            example_image_paths, label_types)
+        return cls(examples, labels)
+    
     def __init__(self, examples, labels):
-        self.examples = examples
-        self.labels = labels
+        self.examples = sorted(examples)
+        self.labels = sorted(labels, key=lambda l: (l['id'], 'bbox' in l))
+
+    def __eq__(self, other): 
+        return self.examples == other.examples and self.labels == other.labels
+
+    @property
+    def example_image_paths(self):
+        return set([e[0] for e in self.examples])
 
     def dump_files(self, dirpath):
-        with open(os.path.join(dirpath, 'images.json'), 'w') as f:
-            json.dump(sorted(self.examples),
-            f, indent=2, sort_keys=True)
-        with open(os.path.join(dirpath, 'labels.json'), 'w') as f:
-            json.dump(sorted(self.labels,
-                key=lambda l: (l['id'], 'bbox' in l)),
-                f, indent=2, sort_keys=True)
+        with open(os.path.join(dirpath, IMAGES_FNAME), 'w') as f:
+            json.dump(self.examples, f, indent=2, sort_keys=True)
+        with open(os.path.join(dirpath, LABELS_FNAME), 'w') as f:
+            json.dump(self.labels, f, indent=2, sort_keys=True)

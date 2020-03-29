@@ -10,6 +10,7 @@ import wandb
 import dataset
 import bucket_api
 import data_library
+import data_library_query
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--dataset_name', type=str, required=True,
@@ -38,35 +39,22 @@ def main(argv):
 
     bucketapi = bucket_api.get_bucket_api()
 
-    categories = data_library.get_categories()
-
-    chosen_cats = [c for c in categories
-        if c['supercategory'] in args.supercategories or
-           c['name'] in args.categories]
+    chosen_cats = data_library_query.categories_filtered(
+        args.supercategories, args.categories)
     chosen_cat_ids = [c['id'] for c in chosen_cats]
 
-    example_labels = collections.defaultdict(list)
-    labels = []
-
-    if 'bbox' in args.annotation_types:
-        box_labels = data_library.get_box_labels()
-        for bl in box_labels.values():
-            if bl['category_id'] in chosen_cat_ids:
-                labels.append(bl)
-    if 'segmentation' in args.annotation_types:
-        seg_labels = data_library.get_seg_labels()
-        for sl in seg_labels.values():
-            if sl['category_id'] in chosen_cat_ids:
-                labels.append(sl)
+    labels = data_library_query.labels_of_types_and_categories(
+        args.annotation_types, chosen_cat_ids)
 
     example_image_paths = set(l['image_path'] for l in labels)
     example_image_paths = set(random.sample(
         example_image_paths, int(args.select_fraction * len(example_image_paths))))
-    labels = [l for l in labels if l['image_path'] in example_image_paths]
+    if len(example_image_paths) == 0:
+        print('Error, you must select at least 1 image')
+        sys.exit(1)
     
-    examples = [(path, bucketapi.get_hash(path)) for path in example_image_paths]
-    artifact = dataset.DatasetArtifact(examples, labels)
-    # print('len(examples)', examples)
+    artifact = dataset.DatasetArtifact.from_library_query(
+        example_image_paths, args.annotation_types)
 
     dataset_dir = './artifact'
     os.makedirs(dataset_dir, exist_ok=True)
@@ -77,7 +65,7 @@ def main(argv):
         metadata={
             'annotation_types': args.annotation_types,
             'categories': [c['name'] for c in chosen_cats],
-            'n_examples': len(examples)},
+            'n_examples': len(example_image_paths)},
         aliases=[args.dataset_version] + ['latest'])
 
 

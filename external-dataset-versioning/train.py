@@ -11,7 +11,7 @@ import dataset
 import bucket_api
 import data_library
 
-parser = argparse.ArgumentParser(description='Dataset artifact name to train on')
+parser = argparse.ArgumentParser(description='Train a new model, based on a dataset artifact.')
 parser.add_argument('--dataset', type=str, required=True, help='')
 parser.add_argument('--model_type', required=True,
     type=str, choices=['bbox', 'segmentation'], help='')
@@ -20,6 +20,7 @@ parser.add_argument('--model_type', required=True,
 def main(argv):
     args = parser.parse_args()
     run = wandb.init(job_type='train-%s' % args.model_type)
+    run.config.update(args)
     ds = run.use_artifact(args.dataset)
     if args.model_type not in ds.metadata['annotation_types']:
         print('Dataset %s has annotations %s, can\'t train model type: %s' % (
