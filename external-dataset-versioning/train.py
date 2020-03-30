@@ -19,16 +19,25 @@ parser.add_argument('--model_type', required=True,
 
 def main(argv):
     args = parser.parse_args()
+
     run = wandb.init(job_type='train-%s' % args.model_type)
     run.config.update(args)
-    ds = run.use_artifact('dataset/%s' % args.dataset)
-    if args.model_type not in ds.metadata['annotation_types']:
-        print('Dataset %s has annotations %s, can\'t train model type: %s' % (
-            args.dataset, ds.metadata['annotation_types'], args.model_type))
-        sys.exit(1)
-    datadir = ds.download()
 
-    # actually download the real images
+    ds_artifact = run.use_artifact('dataset/%s' % args.dataset)
+    if args.model_type not in ds_artifact.metadata['annotation_types']:
+        print('Dataset %s has annotations %s, can\'t train model type: %s' % (
+            args.dataset, ds_artifact.metadata['annotation_types'], args.model_type))
+        sys.exit(1)
+
+    artifact_dir = ds_artifact.download()
+    ds = dataset.DatasetArtifact.from_dir(artifact_dir)
+    dataset_dir = ds.download()
+
+    X, y = [], []
+    for label in ds.labels:
+        X.append(os.path.join(dataset_dir, label['image_path']))
+        y.append(label['bbox'])
+    print ('Xlen, ylen', len(X), len(y))
 
     for i in range(10):
         run.log({'loss': random.random() / (i + 1)})

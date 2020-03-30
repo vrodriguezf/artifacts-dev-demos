@@ -25,6 +25,8 @@ class BucketApiLocal(object):
         self._local_dir = local_dir
     
     def download_file(self, key, local_path):
+        dirname = os.path.dirname(local_path)
+        os.makedirs(dirname, exist_ok=True)
         try:
             shutil.copyfile(os.path.join(self._local_dir, key), local_path)
             return True

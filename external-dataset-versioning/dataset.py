@@ -1,11 +1,17 @@
 import json
 import os
+import random
+import string
 
 import bucket_api
 import data_library_query
 
 IMAGES_FNAME = 'images.json'
 LABELS_FNAME = 'labels.json'
+
+def random_string(n):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(n))
 
 
 class DatasetArtifact(object):
@@ -34,6 +40,16 @@ class DatasetArtifact(object):
     @property
     def example_image_paths(self):
         return set([e[0] for e in self.examples])
+
+    def download(self, rootdir='./datasets'):
+        # TODO: use dataset name as dirname, don't redownload if checksums pass
+        datadir = os.path.join(rootdir, random_string(8))
+        bucketapi = bucket_api.get_bucket_api()
+        for example in self.examples:
+            image_path = example[0]
+            bucketapi.download_file(image_path, os.path.join(datadir, image_path))
+            # TODO: confirm checksum
+        return datadir
 
     def dump_files(self, dirpath):
         with open(os.path.join(dirpath, IMAGES_FNAME), 'w') as f:
