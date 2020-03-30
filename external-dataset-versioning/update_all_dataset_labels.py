@@ -46,8 +46,9 @@ def main(argv):
             dataset_dir = './artifact/%s' % ds_artifact.artifact_type_name
             os.makedirs(dataset_dir, exist_ok=True)
             library_ds.dump_files(dataset_dir)
-            run.log_artifact(ds_artifact.artifact_type_name,
-                paths=dataset_dir,
+            run.log_artifact(
+                name=ds_artifact.artifact_type_name,
+                contents=dataset_dir,
                 metadata=ds_artifact.metadata,
                 # TODO: bump version number
                 aliases=['v2', 'latest'])

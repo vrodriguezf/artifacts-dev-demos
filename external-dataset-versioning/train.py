@@ -21,12 +21,14 @@ def main(argv):
     args = parser.parse_args()
     run = wandb.init(job_type='train-%s' % args.model_type)
     run.config.update(args)
-    ds = run.use_artifact(args.dataset)
+    ds = run.use_artifact('dataset/%s' % args.dataset)
     if args.model_type not in ds.metadata['annotation_types']:
         print('Dataset %s has annotations %s, can\'t train model type: %s' % (
             args.dataset, ds.metadata['annotation_types'], args.model_type))
         sys.exit(1)
     datadir = ds.download()
+
+    # actually download the real images
 
     for i in range(10):
         run.log({'loss': random.random() / (i + 1)})
@@ -36,7 +38,10 @@ def main(argv):
         'This is a placeholder. In a real job, you\'d save model weights here\n%s\n' % random.random())
     model_file.close()
 
-    run.log_artifact('model-%s' % args.model_type, paths='model.json', aliases='latest')
+    run.log_artifact(
+        name='model/%s' % args.model_type,
+        contents='model.json',
+        aliases='latest')
 
 if __name__ == '__main__':
     main(sys.argv)
