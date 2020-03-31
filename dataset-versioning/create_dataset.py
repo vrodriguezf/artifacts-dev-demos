@@ -1,3 +1,5 @@
+"""Query our data library, to produce a new dataset artifact."""
+
 import argparse
 import collections
 import os
@@ -35,36 +37,39 @@ parser.add_argument('--annotation_types', type=str, nargs='*', required=True,
 def main(argv):
     args = parser.parse_args()
 
+    # Track dataset creation as a W&B run, so that we have a log of
+    # how this dataset was created.
     run = wandb.init(job_type='create_dataset')
 
     random.seed(args.seed)
 
-    bucketapi = bucket_api.get_bucket_api()
-
+    # Query our data library for examples that have labels in the specified
+    # categories or supercategories.
     chosen_cats = data_library_query.categories_filtered(
         args.supercategories, args.categories)
     chosen_cat_ids = [c['id'] for c in chosen_cats]
-
     labels = data_library_query.labels_of_types_and_categories(
         args.annotation_types, chosen_cat_ids)
-
     example_image_paths = set(l['image_path'] for l in labels)
     example_image_paths = set(random.sample(
         example_image_paths, int(args.select_fraction * len(example_image_paths))))
     if len(example_image_paths) == 0:
         print('Error, you must select at least 1 image')
         sys.exit(1)
-    
-    artifact = dataset.DatasetArtifact.from_library_query(
+
+
+    # construct the artifact contents (the files we're going to save in the
+    # artifact) for the selected examples, and write them to a directory.
+    artifact_contents = dataset.DatasetArtifactContents.from_library_query(
         example_image_paths, args.annotation_types)
+    working_dir = './artifact'
+    os.makedirs(working_dir, exist_ok=True)
+    artifact_contents.dump_files(working_dir)
 
-    dataset_dir = './artifact'
-    os.makedirs(dataset_dir, exist_ok=True)
-    artifact.dump_files(dataset_dir)
-
+    # log the artifact to W&B.
     run.log_artifact(
         name='dataset/%s' % args.dataset_name,
-        contents=dataset_dir,
+        contents=working_dir,
         metadata={
             'annotation_types': args.annotation_types,
             'categories': [c['name'] for c in chosen_cats],

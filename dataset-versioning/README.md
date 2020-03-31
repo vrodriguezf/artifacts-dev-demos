@@ -2,7 +2,8 @@
 
 This folder contains an end-to-end example of how to version your datasets using W&B Artifacts.
 
-TODO: More info
+Please refer to our "Guide to Managing ML Datasets with W&B Artifacts" doc for an overview of the concepts used here. (TODO: link)
+
 
 ## Running the example
 

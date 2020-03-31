@@ -1,3 +1,5 @@
+"""Create new versions of datasets that need updates."""
+
 import argparse
 import collections
 import json
@@ -17,40 +19,46 @@ parser = argparse.ArgumentParser(description='Create new versions of datasets if
 def main(argv):
     args = parser.parse_args()
 
-    # TODO: ew
+    # TODO: Make it easier to contruct the api
     api_settings = wandb.InternalApi().settings()
     api = wandb.Api(api_settings)
 
-    print(api_settings)
+    # Initialize a W&B run
+    run = wandb.init(job_type='update_dataset')
+    run.config.update(args)
+
+    # iterate through all the datasets we have.
     datasets = api.artifact_types('%s/%s' % (api_settings['entity'], api_settings['project']))
     # TODO: switch to one upload job per artifact, and only if we're upgrading, which
     #     means we need to use the public API before the run API
     for d in datasets:
-        # TODO: ew. We need a higher level type
+        # TODO: query for only dataset artifacts instead of filtering here.
         if d.name.startswith('model'):
             continue
         print('Checking latest for dataset: %s' % d)
 
-        run = wandb.init(job_type='update_dataset')
-        run.config.update(args)
+        # fetch the latest version of each dataset artifact and download it's contents
         ds_artifact = run.use_artifact('%s:latest' % d.name)
         datadir = ds_artifact.download()
+        ds_contents = dataset.DatasetArtifactContents.from_dir(datadir)
 
-        ds = dataset.DatasetArtifact.from_dir(datadir)
-
-        library_ds = dataset.DatasetArtifact.from_library_query(
+        # construct dataset artifact contents using the example in the loaded dataset,
+        # but with the most recent labels from the library.
+        library_ds_contents = dataset.DatasetArtifactContents.from_library_query(
             ds.example_image_paths, ds_artifact.metadata['annotation_types'])
 
-        if ds != library_ds:
+        # if the contents aren't equal, then create a new version based on
+        # library_ds_contents
+        if ds_contents != library_ds_contents:
             print('  updated, create new dataset version')
             dataset_dir = './artifact/%s' % ds_artifact.artifact_type_name
             os.makedirs(dataset_dir, exist_ok=True)
-            library_ds.dump_files(dataset_dir)
+            library_ds_contents.dump_files(dataset_dir)
             run.log_artifact(
                 name=ds_artifact.artifact_type_name,
                 contents=dataset_dir,
                 metadata=ds_artifact.metadata,
-                # TODO: bump version number
+                # TODO: bump version number instead of hard-coding to v2
                 aliases=['v2', 'latest'])
 
 
