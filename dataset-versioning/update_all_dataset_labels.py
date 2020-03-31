@@ -45,7 +45,8 @@ def main(argv):
         # construct dataset artifact contents using the example in the loaded dataset,
         # but with the most recent labels from the library.
         library_ds_contents = dataset.DatasetArtifactContents.from_library_query(
-            ds.example_image_paths, ds_artifact.metadata['annotation_types'])
+            ds_contents.example_image_paths,
+            ds_artifact.metadata['annotation_types'])
 
         # if the contents aren't equal, then create a new version based on
         # library_ds_contents
