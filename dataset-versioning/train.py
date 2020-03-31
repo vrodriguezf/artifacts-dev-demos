@@ -26,7 +26,7 @@ def main(argv):
     run.config.update(args)
 
     # Get the artifact from W&B and mark it as input to this run.
-    ds_artifact = run.use_artifact('dataset/%s' % args.dataset)
+    ds_artifact = run.use_artifact(type='dataset', name=args.dataset)
     if args.model_type not in ds_artifact.metadata['annotation_types']:
         print('Dataset %s has annotations %s, can\'t train model type: %s' % (
             args.dataset, ds_artifact.metadata['annotation_types'], args.model_type))
@@ -54,7 +54,8 @@ def main(argv):
         'This is a placeholder. In a real job, you\'d save model weights here\n%s\n' % random.random())
     model_file.close()
     run.log_artifact(
-        name='model/%s' % args.model_type,
+        type='model',
+        name=args.model_type,
         contents='model.json',
         aliases='latest')
 

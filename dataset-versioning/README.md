@@ -46,7 +46,7 @@ Train a model based on the dataset
 
 ```
 python train.py \
-  --dataset="vehicle boxes:v1" \
+  --dataset="vehicle boxes:latest" \
   --model_type=bbox
 ```
 
@@ -67,3 +67,8 @@ Create new dataset artifact versions for datasets that have updated labels
 ```
 python update_all_dataset_labels.py
 ```
+
+Train a model on one of our updated datasets.
+python train.py \
+  --dataset="furniture boxes:latest" \
+  --model_type=bbox

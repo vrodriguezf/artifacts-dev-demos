@@ -67,7 +67,8 @@ def main(argv):
 
     # log the artifact to W&B.
     run.log_artifact(
-        name='dataset/%s' % args.dataset_name,
+        type='dataset',
+        name=args.dataset_name,
         contents=working_dir,
         metadata={
             'annotation_types': args.annotation_types,

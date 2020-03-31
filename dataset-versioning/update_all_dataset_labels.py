@@ -5,6 +5,7 @@ import collections
 import json
 import os
 import random
+import shutil
 import sys
 import tempfile
 
@@ -33,12 +34,12 @@ def main(argv):
     #     means we need to use the public API before the run API
     for d in datasets:
         # TODO: query for only dataset artifacts instead of filtering here.
-        if d.name.startswith('model'):
+        if d.type != 'dataset':
             continue
         print('Checking latest for dataset: %s' % d)
 
         # fetch the latest version of each dataset artifact and download it's contents
-        ds_artifact = run.use_artifact('%s:latest' % d.name)
+        ds_artifact = run.use_artifact(type='dataset', name='%s:latest' % d.name)
         datadir = ds_artifact.download()
         ds_contents = dataset.DatasetArtifactContents.from_dir(datadir)
 
@@ -52,11 +53,16 @@ def main(argv):
         # library_ds_contents
         if ds_contents != library_ds_contents:
             print('  updated, create new dataset version')
-            dataset_dir = './artifact/%s' % ds_artifact.artifact_type_name
-            os.makedirs(dataset_dir, exist_ok=True)
+            dataset_dir = './artifact/%s' % d.name
+            try:
+                shutil.rmtree(dataset_dir)
+            except FileNotFoundError:
+                pass
+            os.makedirs(dataset_dir)
             library_ds_contents.dump_files(dataset_dir)
             run.log_artifact(
-                name=ds_artifact.artifact_type_name,
+                type='dataset',
+                name=d.name,
                 contents=dataset_dir,
                 metadata=ds_artifact.metadata,
                 # TODO: bump version number instead of hard-coding to v2
