@@ -40,6 +40,7 @@ def main(argv):
     # Track dataset creation as a W&B run, so that we have a log of
     # how this dataset was created.
     run = wandb.init(job_type='create_dataset')
+    run.config.update(args)
 
     random.seed(args.seed)
 
