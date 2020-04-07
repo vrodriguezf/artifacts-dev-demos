@@ -60,7 +60,7 @@ def main(argv):
 
     # construct the artifact contents (the files we're going to save in the
     # artifact) for the selected examples, and write them to a directory.
-    artifact_contents = dataset.DatasetArtifactContents.from_library_query(
+    artifact_contents = dataset.Dataset.from_library_query(
         example_image_paths, args.annotation_types)
     working_dir = './artifact'
     os.makedirs(working_dir, exist_ok=True)

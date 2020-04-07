@@ -14,16 +14,17 @@ def random_string(n):
     return ''.join(random.choice(letters) for i in range(n))
 
 
-class DatasetArtifactContents(object):
+class Dataset(object):
     """Methods for reading and writing the files stored in our dataset artifacts.
 
     For each example we store a path to the image in our data library (and its checksum)
     and the specific labels needed for this dataset.
     """
     @classmethod
-    def from_dir(cls, dirpath):
-        examples = json.load(open(os.path.join(dirpath, IMAGES_FNAME)))
-        labels = json.load(open(os.path.join(dirpath, LABELS_FNAME)))
+    def from_artifact(cls, artifact):
+        artifact_dir = artifact.download()
+        examples = json.load(open(os.path.join(artifact_dir, IMAGES_FNAME)))
+        labels = json.load(open(os.path.join(artifact_dir, LABELS_FNAME)))
         return cls(examples, labels)
 
     @classmethod

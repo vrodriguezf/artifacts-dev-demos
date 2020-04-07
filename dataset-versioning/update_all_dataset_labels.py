@@ -40,12 +40,11 @@ def main(argv):
 
         # fetch the latest version of each dataset artifact and download it's contents
         ds_artifact = run.use_artifact(type='dataset', name='%s:latest' % d.name)
-        datadir = ds_artifact.download()
-        ds_contents = dataset.DatasetArtifactContents.from_dir(datadir)
+        ds_contents = dataset.Dataset.from_artifact(ds_artifact)
 
         # construct dataset artifact contents using the example in the loaded dataset,
         # but with the most recent labels from the library.
-        library_ds_contents = dataset.DatasetArtifactContents.from_library_query(
+        library_ds_contents = dataset.Dataset.from_library_query(
             ds_contents.example_image_paths,
             ds_artifact.metadata['annotation_types'])
 

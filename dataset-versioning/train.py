@@ -32,9 +32,9 @@ def main(argv):
             args.dataset, ds_artifact.metadata['annotation_types'], args.model_type))
         sys.exit(1)
 
-    # download the artifact contents, and then the actual dataset files.
-    artifact_dir = ds_artifact.download()
-    ds = dataset.DatasetArtifactContents.from_dir(artifact_dir)
+    # Initialize our Dataset class from the artifact's contents, and download
+    # the actual dataset examples.
+    ds = dataset.Dataset.from_artifact(ds_artifact)
     dataset_dir = ds.download()
 
     # Build X (images) and y (labels) for training
