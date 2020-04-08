@@ -52,6 +52,12 @@ class Dataset(object):
         return cls(examples, labels)
     
     def __init__(self, examples, labels, artifact=None):
+        """Constructor.
+
+        A dataset consists of a list of examples, and their labels. We keep the
+        examples and labels in sorted order, so that the same labels and examples
+        will produce the same exact artifact.
+        """
         self._artifact = artifact
         self.examples = sorted(examples)
         self.labels = sorted(labels, key=lambda l: (l['id'], 'bbox' in l))
