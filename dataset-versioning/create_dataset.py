@@ -60,21 +60,13 @@ def main(argv):
 
     # construct the artifact contents (the files we're going to save in the
     # artifact) for the selected examples, and write them to a directory.
-    artifact_contents = dataset.Dataset.from_library_query(
+    ds = dataset.Dataset.from_library_query(
         example_image_paths, args.annotation_types)
-    working_dir = './artifact'
-    os.makedirs(working_dir, exist_ok=True)
-    artifact_contents.dump_files(working_dir)
 
     # log the artifact to W&B.
     run.log_artifact(
-        type='dataset',
+        artifact=ds.artifact,
         name=args.dataset_name,
-        contents=working_dir,
-        metadata={
-            'annotation_types': args.annotation_types,
-            'categories': [c['name'] for c in chosen_cats],
-            'n_examples': len(example_image_paths)},
         aliases=[args.dataset_version] + ['latest'])
 
 

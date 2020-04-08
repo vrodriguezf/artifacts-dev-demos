@@ -9,7 +9,9 @@ class BucketApiS3(object):
         self._bucket_name = bucket_name
         self._s3 = boto3.client('s3')
     
-    def download_file(self, key, local_path):
+    def download_file(self, key, local_path, hash=None):
+        # TODO: hash implementation: don't download if we already have the correct
+        #   has at local_path.
         self._s3.download_file(self._bucket_name, key, local_path)
 
     def upload_file(self, key, local_path):
@@ -24,11 +26,13 @@ class BucketApiLocal(object):
     def __init__(self, local_dir):
         self._local_dir = local_dir
     
-    def download_file(self, key, local_path):
+    def download_file(self, key, local_path, hash=None):
         dirname = os.path.dirname(local_path)
         os.makedirs(dirname, exist_ok=True)
         try:
-            shutil.copyfile(os.path.join(self._local_dir, key), local_path)
+            if hash is None or (
+                    not os.path.isfile(local_path) or self._file_hash(local_path) != hash):
+                shutil.copyfile(os.path.join(self._local_dir, key), local_path)
             return True
         except FileNotFoundError:
             return False
@@ -39,12 +43,15 @@ class BucketApiLocal(object):
         os.makedirs(dirname, exist_ok=True)
         shutil.copy(local_path, file_path)
 
-    def get_hash(self, key):
+    def _file_hash(self, local_path):
         hash_md5 = hashlib.md5()
-        with open(os.path.join(self._local_dir, key), "rb") as f:
+        with open(local_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_md5.update(chunk)
         return hash_md5.hexdigest()
+
+    def get_hash(self, key):
+        return self._file_hash(os.path.join(self._local_dir, key))
 
 def get_bucket_api():
     bucket_settings_fname = 'bucket_settings.txt'

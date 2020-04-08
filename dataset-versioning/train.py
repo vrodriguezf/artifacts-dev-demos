@@ -53,6 +53,7 @@ def main(argv):
     model_file.write(
         'This is a placeholder. In a real job, you\'d save model weights here\n%s\n' % random.random())
     model_file.close()
+
     run.log_artifact(
         type='model',
         name=args.model_type,

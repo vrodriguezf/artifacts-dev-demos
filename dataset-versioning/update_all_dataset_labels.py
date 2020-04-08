@@ -47,23 +47,15 @@ def main(argv):
         library_ds_contents = dataset.Dataset.from_library_query(
             ds_contents.example_image_paths,
             ds_artifact.metadata['annotation_types'])
+        library_ds_artifact = library_ds_contents.artifact
 
         # if the contents aren't equal, then create a new version based on
         # library_ds_contents
-        if ds_contents != library_ds_contents:
+        if ds_artifact.digest != library_ds_artifact.digest:
             print('  updated, create new dataset version')
-            dataset_dir = './artifact/%s' % d.name
-            try:
-                shutil.rmtree(dataset_dir)
-            except FileNotFoundError:
-                pass
-            os.makedirs(dataset_dir)
-            library_ds_contents.dump_files(dataset_dir)
             run.log_artifact(
-                type='dataset',
+                artifact=library_ds_contents.artifact,
                 name=d.name,
-                contents=dataset_dir,
-                metadata=ds_artifact.metadata,
                 # TODO: bump version number instead of hard-coding to v2
                 aliases=['v2', 'latest'])
 
