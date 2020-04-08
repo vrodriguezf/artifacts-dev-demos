@@ -58,14 +58,14 @@ def main(argv):
         print('Error, you must select at least 1 image')
         sys.exit(1)
 
-    # construct the artifact contents (the files we're going to save in the
-    # artifact) for the selected examples, and write them to a directory.
+    # query our library to make the dataset.
     ds = dataset.Dataset.from_library_query(
         example_image_paths, args.annotation_types)
 
-    # log the artifact to W&B.
+    # log the artifact to W&B. The ds.artifact() method does the work
+    # of computing the artifact's actual contents
     run.log_artifact(
-        artifact=ds.artifact,
+        artifact=ds.artifact(),
         name=args.dataset_name,
         aliases=[args.dataset_version] + ['latest'])
 

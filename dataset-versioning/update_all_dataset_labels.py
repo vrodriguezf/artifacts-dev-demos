@@ -40,21 +40,21 @@ def main(argv):
 
         # fetch the latest version of each dataset artifact and download it's contents
         ds_artifact = run.use_artifact(type='dataset', name='%s:latest' % d.name)
-        ds_contents = dataset.Dataset.from_artifact(ds_artifact)
+        ds = dataset.Dataset.from_artifact(ds_artifact)
 
         # construct dataset artifact contents using the example in the loaded dataset,
         # but with the most recent labels from the library.
-        library_ds_contents = dataset.Dataset.from_library_query(
-            ds_contents.example_image_paths,
+        library_ds = dataset.Dataset.from_library_query(
+            ds.example_image_paths,
             ds_artifact.metadata['annotation_types'])
-        library_ds_artifact = library_ds_contents.artifact
+        library_ds_artifact = library_ds.artifact()
 
-        # if the contents aren't equal, then create a new version based on
-        # library_ds_contents
+        # If the digests aren't equal, then the labels have been updated, save the
+        # library dataset artifact as the new versoin for this dataset.
         if ds_artifact.digest != library_ds_artifact.digest:
             print('  updated, create new dataset version')
             run.log_artifact(
-                artifact=library_ds_contents.artifact,
+                artifact=library_ds_artifact,
                 name=d.name,
                 # TODO: bump version number instead of hard-coding to v2
                 aliases=['v2', 'latest'])

@@ -1,3 +1,12 @@
+"""Code for versioning datasets with W&B Artifacts.
+
+You should copy this file into your code base and customize it to your needs.
+
+For each dataset version we create, we store an artifact in W&B. Each dataset
+artifact contains a list of examples and their labels. We don't store the
+actual image data in the artifact. Instead we keep the image data in our
+data library (stored in a bucket in cloud storage).
+"""
 import json
 import os
 import random
@@ -18,13 +27,11 @@ def random_string(n):
 
 
 class Dataset(object):
-    """Methods for reading and writing the files stored in our dataset artifacts.
+    """A Dataset that we can train on, using W&B Artifacts for tracking."""
 
-    For each example we store a path to the image in our data library (and its checksum)
-    and the specific labels needed for this dataset.
-    """
     @classmethod
     def from_artifact(cls, artifact):
+        """Given an artifact, construct a Dataset object."""
         artifact_dir = artifact.download()
         examples = json.load(open(os.path.join(artifact_dir, IMAGES_FNAME)))
         labels = json.load(open(os.path.join(artifact_dir, LABELS_FNAME)))
@@ -32,6 +39,11 @@ class Dataset(object):
 
     @classmethod
     def from_library_query(cls, example_image_paths, label_types):
+        """Query our data library to construct a Dataset object.
+
+        You might make many different methods like this, to do different kinds of
+        queries, or build datasets in different ways.
+        """
         bucketapi = bucket_api.get_bucket_api()
         examples = [
             [path, bucketapi.get_hash(path)] for path in example_image_paths]
@@ -46,23 +58,34 @@ class Dataset(object):
 
     @property
     def example_image_paths(self):
+        """Return the relative paths to example images for this dataset."""
         return set([e[0] for e in self.examples])
 
     def download(self):
-        datadir = self.artifact.external_data_dir
+        """Download the actual dataset contents."""
+        # We use the external_data_dir directory of our artifact. This directory
+        # is a good place to cache files that are related to the artifact, but not
+        # actually part of the artifact's contents.
+        datadir = self.artifact().external_data_dir
         bucketapi = bucket_api.get_bucket_api()
         for example in self.examples:
             image_path, image_hash = example
             bucketapi.download_file(image_path, os.path.join(datadir, image_path), hash=image_hash)
         return datadir
 
-    @property
     def artifact(self):
+        """Return an artifact that represents this dataset."""
+        # Either just return the artifact we were constructed with, or build an
+        # artifact and keep a reference to it.
         if self._artifact is None:
-            self._artifact = self.to_artifact()
+            self._artifact = self._to_artifact()
         return self._artifact
 
-    def to_artifact(self):
+    def _to_artifact(self):
+        """Build an artifact that represents this datset."""
+
+        # You can put whatever you want in the artifacts metadata, this will be displayed
+        # in tables in the W&B UI, and will be indexed for querying.
         # TODO: add more metadata (class dist)
         annotation_types = []
         if 'bbox' in self.labels[0]:
@@ -70,6 +93,7 @@ class Dataset(object):
         if 'segmentation' in self.labels[0]:
             annotation_types.append('segmentation')
 
+        # We use a WriteableArtifact, which gives us a directory to write our files into.
         artifact = wandb.WriteableArtifact(
             type='dataset',
             metadata= {

@@ -48,7 +48,8 @@ def main(argv):
     for i in range(10):
         run.log({'loss': random.random() / (i + 1)})
 
-    # Save our trained model as an artifact.
+    # Save our trained model as an artifact. Here we save the artifact by passing
+    # a path to the file we want to include in the artifact's contents.
     model_file = open('model.json', 'w')
     model_file.write(
         'This is a placeholder. In a real job, you\'d save model weights here\n%s\n' % random.random())
@@ -57,7 +58,7 @@ def main(argv):
     run.log_artifact(
         type='model',
         name=args.model_type,
-        contents='model.json',
+        paths='model.json',
         aliases='latest')
 
 if __name__ == '__main__':
