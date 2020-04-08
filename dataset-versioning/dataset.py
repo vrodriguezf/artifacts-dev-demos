@@ -7,6 +7,7 @@ artifact contains a list of examples and their labels. We don't store the
 actual image data in the artifact. Instead we keep the image data in our
 data library (stored in a bucket in cloud storage).
 """
+from collections import defaultdict
 import json
 import os
 import random
@@ -15,6 +16,7 @@ import string
 import wandb
 
 import bucket_api
+import data_library
 import data_library_query
 
 
@@ -92,19 +94,25 @@ class Dataset(object):
 
         # You can put whatever you want in the artifacts metadata, this will be displayed
         # in tables in the W&B UI, and will be indexed for querying.
-        # TODO: add more metadata (class dist)
         annotation_types = []
         if 'bbox' in self.labels[0]:
             annotation_types.append('bbox')
         if 'segmentation' in self.labels[0]:
             annotation_types.append('segmentation')
+        cat_counts = defaultdict(int)
+        categories = data_library.get_categories()
+        cats_by_id = {c['id']: c['name'] for c in categories}
+        for l in self.labels:
+            cat_name = cats_by_id[l['category_id']]
+            cat_counts[cat_name] += 1
 
         # We use a WriteableArtifact, which gives us a directory to write our files into.
         artifact = wandb.WriteableArtifact(
             type='dataset',
             metadata= {
                 'n_examples': len(self.examples),
-                'annotation_types': annotation_types})
+                'annotation_types': annotation_types,
+                'category_counts': cat_counts})
 
         with open(os.path.join(artifact.artifact_dir, IMAGES_FNAME), 'w') as f:
             json.dump(self.examples, f, indent=2, sort_keys=True)
