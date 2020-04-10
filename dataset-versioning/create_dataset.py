@@ -17,8 +17,6 @@ import data_library_query
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--dataset_name', type=str, required=True,
                     help='name for this dataset')
-parser.add_argument('--dataset_version', type=str, required=True,
-                    help='version label for this dataset')
 
 parser.add_argument('--supercategories', type=str, nargs='*', default=[],
                     help='coco supercategories to take examples from')

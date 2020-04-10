@@ -20,9 +20,7 @@ parser = argparse.ArgumentParser(description='Create new versions of datasets if
 def main(argv):
     args = parser.parse_args()
 
-    # TODO: Make it easier to contruct the api
-    api_settings = wandb.InternalApi().settings()
-    api = wandb.Api(api_settings)
+    api = wandb.Api()
 
     # Initialize a W&B run
     run = wandb.init(job_type='update_dataset')
