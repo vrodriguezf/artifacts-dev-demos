@@ -29,13 +29,8 @@ def main(argv):
     run.config.update(args)
 
     # iterate through all the datasets we have.
-    datasets = api.artifact_types('%s/%s' % (api_settings['entity'], api_settings['project']))
-    # TODO: switch to one upload job per artifact, and only if we're upgrading, which
-    #     means we need to use the public API before the run API
-    for d in datasets:
-        # TODO: query for only dataset artifacts instead of filtering here.
-        if d.type != 'dataset':
-            continue
+    dataset_type = api.artifact_type('dataset')
+    for d in dataset_type.artifact_collections():
         print('Checking latest for dataset: %s' % d)
 
         # fetch the latest version of each dataset artifact and download it's contents
@@ -56,8 +51,7 @@ def main(argv):
             run.log_artifact(
                 artifact=library_ds_artifact,
                 name=d.name,
-                # TODO: bump version number instead of hard-coding to v2
-                aliases=['v2', 'latest'])
+                aliases=['latest'])
 
 
 if __name__ == '__main__':

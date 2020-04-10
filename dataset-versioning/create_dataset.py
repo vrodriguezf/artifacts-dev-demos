@@ -67,7 +67,7 @@ def main(argv):
     run.log_artifact(
         artifact=ds.artifact(),
         name=args.dataset_name,
-        aliases=[args.dataset_version] + ['latest'])
+        aliases=['latest'])
 
 
 if __name__ == '__main__':
