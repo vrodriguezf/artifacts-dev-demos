@@ -1,9 +1,0 @@
-datasets
-bucket
-wandb
-__pycache__
-artifact
-artifacts
-seg.json
-model.json
-boxes.json
