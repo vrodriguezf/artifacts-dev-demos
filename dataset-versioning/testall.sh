@@ -14,8 +14,7 @@ python sim_collection_run.py col2 100000 200000
 python create_dataset.py \
   --supercategories vehicle \
   --annotation_types bbox \
-  --dataset_name "vehicle boxes" \
-  --dataset_version v1
+  --dataset_name "vehicle boxes"
 
 # train a model on the the uploaded dataset
 python train.py \
